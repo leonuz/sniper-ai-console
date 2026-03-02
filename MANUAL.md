@@ -2,32 +2,32 @@
 
 ## SERVICE TOGGLES
 
-Each service (Ollama, WebUI) has its own **START / STOP** button in the sidebar.
+Each service (Ollama, WebUI, OpenClaw) has its own **START / STOP** button in the sidebar.
 
 - **Green button (STOP)** - service is running. Click to shut it down individually.
 - **Red button (START)** - service is offline. Click to launch it.
 
-The status light, label (ONLINE/OFFLINE), and version number update automatically.
+The status light, label (ONLINE/OFFLINE), and version number update automatically every second.
+
+Ollama and Open-WebUI run as native Windows processes. OpenClaw runs on WSL2 Ubuntu and is controlled via `wsl` commands. The OpenClaw binary path is configurable in `config.json`.
 
 ## RESTART
 
-Performs a Force Shutdown of both engines, waits briefly, then relaunches both.
+Performs a Force Shutdown of all engines, waits briefly, then relaunches all.
 Useful after model changes, config updates, or when something feels stuck.
 
 ## FORCE SHUTDOWN
 
-Stops Ollama and Open-WebUI in 3 steps:
+Stops all services in 4 steps:
 
 1. Kill Ollama by tracked PID + full process tree.
 2. Kill Open-WebUI by tracked PID + full process tree.
 3. psutil sweep to remove any orphaned worker processes.
+4. Stop OpenClaw gateway via WSL.
 
-The console itself stays open.
+## EXIT
 
-## MINIMIZE TO TRAY
-
-Hides the console window to the system tray.
-Right-click the tray icon to restore or exit completely.
+Found in the **Engines** menu. Performs a Force Shutdown then closes the console application.
 
 ## GRAPHS TAB
 
@@ -50,30 +50,39 @@ The top of the Models tab shows which model is currently loaded in GPU memory (V
 ### Model Library
 
 - **Pull** a new model by entering a name from the Ollama library and clicking PULL.
-- **Delete** a model by clicking its DELETE button.
+- **Delete** a model by clicking its DELETE button. A confirmation dialog will appear.
 - **Refresh** manually with the REFRESH button.
 
 ## PROCESSES TAB
 
-Top running processes by CPU usage, refreshed automatically.
-Ollama and Open-WebUI processes are highlighted in cyan.
+Shows the top 25 processes by CPU usage, refreshed every 5 seconds (configurable).
+AI stack processes (ollama.exe, python.exe, open-webui.exe) are highlighted in cyan.
 
 ## SYSTEM LOG
 
-Visible at the bottom of every tab. Shows timestamped events colour-coded by level:
+Visible across all tabs. Shows timestamped messages with colour-coded levels:
 
-- **DEBUG** (cyan) - internal details
-- **INFO** (grey) - general status
-- **WARN** (yellow) - warnings
-- **SUCCESS** (green) - confirmations
-- **ERROR** (red) - failures
-- **MODEL** (purple) - model operations
+- **DEBUG** (cyan) - internal diagnostics.
+- **INFO** (grey) - routine status updates.
+- **WARN** (yellow) - non-critical issues.
+- **SUCCESS** (green) - operations that completed successfully.
+- **ERROR** (red) - failures.
+- **MODEL** (purple) - model-specific operations.
 
-Logs are also written to `sniper_ai.log` (configurable in `config.json`).
+Use **CLEAR** to empty the log. All log messages are also written to `sniper_ai.log` (rotating file).
+
+## PORTAL MENU
+
+- **Open WebUI Portal** - opens the Open-WebUI web interface in the browser.
+- **Open OpenClaw Dashboard** - opens the OpenClaw web dashboard in the browser.
 
 ## HELP MENU
 
-Manual, Changelog, and Who Am I are accessible from the Help menu in the top menu bar.
+- **Manual** - this document.
+- **Changelog** - version history.
+- **Who Am I** - author info and app version.
+- **Check for Updates** - compares installed Open-WebUI version against the latest on PyPI.
+- **Update Open-WebUI** - stops WebUI, runs pip upgrade, restarts WebUI automatically.
 
 ## UPDATES
 
@@ -88,3 +97,21 @@ The console also checks for updates **automatically** the first time WebUI comes
 
 Edit `config.json` to change paths, URLs, UI dimensions, and logging options
 without modifying any code. The file is auto-generated with defaults if missing.
+
+Key settings:
+
+- **paths.ollama** - full path to ollama.exe
+- **paths.webui** - full path to open-webui.exe in venv
+- **paths.openclaw** - full path to openclaw binary inside WSL (e.g. /home/user/.npm-global/bin/openclaw)
+- **engines.openclaw_port** - OpenClaw gateway port (default: 18789)
+- **urls.openclaw_dashboard** - OpenClaw dashboard URL
+- **logging.log_to_file** - enable/disable file logging
+- **logging.log_file** - log filename
+- **logging.max_file_size_mb** - max size before rotation
+- **ui.sidebar_width** - sidebar pixel width
+- **ui.graph_height / graph_width** - telemetry graph dimensions
+- **ui.proc_refresh_interval** - seconds between process table updates
+
+## SYSTEM TRAY
+
+Click **MINIMIZE TO TRAY** to hide the console window. Right-click the tray icon to **Show Console** or **Exit**. Requires the `pystray` and `pillow` packages.

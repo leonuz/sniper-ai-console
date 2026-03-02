@@ -13,6 +13,7 @@ from config import UI
 browser_launched   = False
 ol_logged          = False
 wb_logged          = False
+oc_logged          = False
 engine_start_time  = 0.0
 pull_in_progress   = False
 update_checked     = False

@@ -17,7 +17,7 @@ CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
 _DEFAULTS = {
     "app": {
         "name": "Sniper AI Console",
-        "version": "v1.2",
+        "version": "v1.3",
         "author": "Leonuz",
         "license": "MIT",
         "portfolio_url": "https://leonuz.github.com",
@@ -25,12 +25,14 @@ _DEFAULTS = {
     "paths": {
         "ollama": r"C:\ollama-intel\ollama.exe",
         "webui": r"C:\ollama-intel\open-webui\venv\Scripts\open-webui.exe",
+        "openclaw": "/home/leonuz/.npm-global/bin/openclaw",
     },
     "urls": {
         "portal": "https://sniperx1.uzc",
         "ollama_api": "http://127.0.0.1:11434",
         "webui_local": "http://127.0.0.1:8080",
         "model_library": "https://ollama.com/library",
+        "openclaw_dashboard": "http://127.0.0.1:18789",
     },
     "files": {
         "icon": "icon.ico",
@@ -54,6 +56,7 @@ _DEFAULTS = {
         "ollama_host": "0.0.0.0:11434",
         "ollama_port": 11434,
         "webui_port": 8080,
+        "openclaw_port": 18789,
         "browser_command": "start msedge",
         "restart_delay": 1.5,
         "orphan_kill_delay": 0.5,
@@ -118,13 +121,15 @@ CFG = load()
 APP_NAME    = CFG["app"]["name"]
 APP_VERSION = CFG["app"]["version"]
 
-OLLAMA_PATH = CFG["paths"]["ollama"]
-WEBUI_PATH  = CFG["paths"]["webui"]
-WEBUI_PIP   = os.path.join(os.path.dirname(WEBUI_PATH), "pip.exe")
+OLLAMA_PATH   = CFG["paths"]["ollama"]
+WEBUI_PATH    = CFG["paths"]["webui"]
+WEBUI_PIP     = os.path.join(os.path.dirname(WEBUI_PATH), "pip.exe")
+OPENCLAW_PATH = CFG["paths"]["openclaw"]
 
 PORTAL_URL  = CFG["urls"]["portal"]
 OLLAMA_API  = CFG["urls"]["ollama_api"]
 WEBUI_LOCAL = CFG["urls"]["webui_local"]
+OPENCLAW_DASHBOARD = CFG["urls"]["openclaw_dashboard"]
 
 ICON_FILE   = os.path.join(BASE_DIR, CFG["files"]["icon"])
 LOGO_FILE   = os.path.join(BASE_DIR, CFG["files"]["logo"])

@@ -4,7 +4,7 @@
   <img src="logo.png" alt="Sniper AI Console" width="300">
 </p>
 
-**Enhanced cyberpunk control panel for managing a local AI stack powered by [Ollama](https://ollama.com) + [Open-WebUI](https://github.com/open-webui/open-webui).**
+**Enhanced cyberpunk control panel for managing a local AI stack powered by [Ollama](https://ollama.com) + [Open-WebUI](https://github.com/open-webui/open-webui) + [OpenClaw](https://github.com/openclaw/openclaw).**
 
 Built with [DearPyGui](https://github.com/hoffstadt/DearPyGui) for a fast, native desktop experience.
 
@@ -12,11 +12,13 @@ Built with [DearPyGui](https://github.com/hoffstadt/DearPyGui) for a fast, nativ
 
 ## Features
 
-- **Service Control** - Individual START/STOP toggles for Ollama and Open-WebUI with real-time status indicators
+- **Service Control** - Individual START/STOP toggles for Ollama, Open-WebUI, and OpenClaw with real-time status indicators
 - **System Telemetry** - Live GPU, CPU, and RAM graphs updated every second
-- **Model Manager** - Pull, list, and delete Ollama models directly from the console
+- **Model Manager** - Pull, list, and delete Ollama models with confirmation dialogs
+- **VRAM Manager** - View active model, load/unload models from GPU memory, switch between models
 - **Process Monitor** - Top 25 processes by CPU usage with AI stack highlighting
 - **Update Manager** - Check for and install Open-WebUI updates from the Help menu
+- **OpenClaw Gateway** - Start/stop OpenClaw running on WSL2 Ubuntu, open its dashboard
 - **Health Check** - Detects crashed/zombie processes and reports status automatically
 - **File Logging** - Rotating log file (`sniper_ai.log`) for post-mortem debugging
 - **System Tray** - Minimize to tray with right-click restore/exit
@@ -34,6 +36,7 @@ Built with [DearPyGui](https://github.com/hoffstadt/DearPyGui) for a fast, nativ
 - **Python**: 3.10+
 - **Ollama**: Installed locally
 - **Open-WebUI**: Installed in a Python virtual environment
+- **OpenClaw** (optional): Running on WSL2 Ubuntu
 
 ### Python Dependencies
 
@@ -61,7 +64,8 @@ pip install dearpygui psutil requests pillow pystray
 {
     "paths": {
         "ollama": "C:\\path\\to\\ollama.exe",
-        "webui": "C:\\path\\to\\open-webui\\venv\\Scripts\\open-webui.exe"
+        "webui": "C:\\path\\to\\open-webui\\venv\\Scripts\\open-webui.exe",
+        "openclaw": "/home/youruser/.npm-global/bin/openclaw"
     }
 }
 ```
@@ -82,8 +86,8 @@ All settings live in `config.json` - no need to edit code. The file is auto-gene
 | Section | What it controls |
 |---------|-----------------|
 | `app` | Name, version, author info |
-| `paths` | Ollama and WebUI executable locations |
-| `urls` | Portal URL, API endpoints |
+| `paths` | Ollama, WebUI, and OpenClaw executable locations |
+| `urls` | Portal URL, API endpoints, OpenClaw dashboard |
 | `files` | Icon and logo filenames |
 | `ui` | Window dimensions, graph sizes, refresh intervals |
 | `engines` | Ports, host bindings, browser command |
@@ -99,8 +103,8 @@ sniper-ai-console/
 ├── state.py          # Shared mutable state
 ├── logger.py         # Visual log + rotating file log
 ├── helpers.py        # Utilities (ports, process kill, GPU)
-├── engines.py        # Service start/stop/toggle
-├── monitoring.py     # Telemetry, models, process table
+├── engines.py        # Service start/stop/toggle (Ollama, WebUI, OpenClaw)
+├── monitoring.py     # Telemetry, models, VRAM manager, process table
 ├── updater.py        # Open-WebUI update checker/installer
 ├── ui.py             # GUI theme, layout, help popups
 ├── config.json       # User-editable configuration

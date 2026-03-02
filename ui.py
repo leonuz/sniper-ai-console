@@ -11,7 +11,7 @@ import dearpygui.dearpygui as dpg
 import state
 from config import (
     APP_NAME, APP_VERSION, BASE_DIR, CFG,
-    ICON_FILE, LOGO_FILE, PORTAL_URL, UI,
+    ICON_FILE, LOGO_FILE, PORTAL_URL, OPENCLAW_DASHBOARD, UI,
 )
 from logger import log
 from helpers import (
@@ -20,7 +20,7 @@ from helpers import (
 )
 from engines import (
     start_all, nuclear_shutdown, restart_all,
-    toggle_ollama, toggle_webui,
+    toggle_ollama, toggle_webui, toggle_openclaw,
 )
 from monitoring import (
     refresh_models, pull_model_callback,
@@ -141,12 +141,16 @@ def _render_md_window(tag: str, title: str, filename: str,
                     dpg.add_spacer(height=6)
                     dpg.add_text(f"  {stripped[3:]}", color=YELLOW)
                     dpg.add_spacer(height=2)
+                elif stripped.startswith("### "):
+                    dpg.add_spacer(height=4)
+                    dpg.add_text(f"    {stripped[4:]}", color=CYAN)
+                    dpg.add_spacer(height=2)
                 elif stripped.startswith("- **"):
                     # Bold list item — extract bold part
                     dpg.add_text(f"    {stripped[2:]}", color=WHITE)
                 elif stripped.startswith("- "):
                     dpg.add_text(f"    {stripped}", color=WHITE)
-                elif stripped.startswith("1. ") or stripped.startswith("2. ") or stripped.startswith("3. "):
+                elif stripped and stripped[0].isdigit() and ". " in stripped[:4]:
                     dpg.add_text(f"    {stripped}", color=WHITE)
                 elif stripped == "":
                     dpg.add_spacer(height=4)
@@ -190,7 +194,7 @@ def show_whoami_window() -> None:
         dpg.add_spacer(height=8)
         dpg.add_text(f"  App Version :  {APP_VERSION}", color=DIM)
         dpg.add_text(f"  License     :  {app['license']}", color=DIM)
-        dpg.add_text( "  Stack       :  DearPyGui + Ollama + Open-WebUI", color=DIM)
+        dpg.add_text( "  Stack       :  DearPyGui + Ollama + Open-WebUI + OpenClaw", color=DIM)
 
 
 # ─────────────────────────────────────────────
@@ -273,7 +277,8 @@ def build_gui() -> None:
                 dpg.add_menu_item(label="Shutdown All", callback=nuclear_shutdown)
                 dpg.add_separator()
                 dpg.add_menu_item(label="Toggle Ollama",  callback=lambda: toggle_ollama())
-                dpg.add_menu_item(label="Toggle WebUI",   callback=lambda: toggle_webui())
+                dpg.add_menu_item(label="Toggle WebUI",     callback=lambda: toggle_webui())
+                dpg.add_menu_item(label="Toggle OpenClaw", callback=lambda: toggle_openclaw())
                 dpg.add_separator()
                 dpg.add_menu_item(label="Exit", callback=lambda: (nuclear_shutdown(), dpg.stop_dearpygui()))
             with dpg.menu(label="View"):
@@ -289,9 +294,12 @@ def build_gui() -> None:
                 dpg.add_menu_item(label="Refresh List",
                     callback=lambda: threading.Thread(target=refresh_models, daemon=True).start())
             with dpg.menu(label="Portal"):
-                dpg.add_menu_item(label="Open in Browser",
+                dpg.add_menu_item(label="Open WebUI Portal",
                     callback=lambda: os.system(
                         f"{CFG['engines']['browser_command']} {PORTAL_URL}"))
+                dpg.add_menu_item(label="Open OpenClaw Dashboard",
+                    callback=lambda: os.system(
+                        f"{CFG['engines']['browser_command']} {OPENCLAW_DASHBOARD}"))
             with dpg.menu(label="Help"):
                 dpg.add_menu_item(label="Manual",    callback=show_help_window)
                 dpg.add_menu_item(label="Changelog", callback=show_changelog_window)
@@ -346,6 +354,19 @@ def build_gui() -> None:
                                    callback=lambda: toggle_webui())
                     dpg.add_spacer(width=4)
                     dpg.add_text("--", tag="wb_ver", color=CYAN)
+                dpg.add_spacer(height=4)
+
+                # OpenClaw toggle row
+                with dpg.group(horizontal=True):
+                    with dpg.drawlist(width=14, height=14):
+                        dpg.draw_circle((7, 7), 5, fill=RED_RGB, tag="oc_light")
+                    dpg.add_text(" OpenClaw", color=WHITE)
+                    dpg.add_text("OFFLINE", tag="oc_status", color=RED)
+                with dpg.group(horizontal=True):
+                    dpg.add_button(label="START", tag="oc_toggle", width=90, height=22,
+                                   callback=lambda: toggle_openclaw())
+                    dpg.add_spacer(width=4)
+                    dpg.add_text("--", tag="oc_ver", color=CYAN)
                 dpg.add_spacer(height=2)
 
                 dpg.add_spacer(height=10)
@@ -377,6 +398,10 @@ def build_gui() -> None:
                 dpg.add_button(label="OPEN PORTAL", width=-1, height=28,
                     callback=lambda: os.system(
                         f"{CFG['engines']['browser_command']} {PORTAL_URL}"))
+                dpg.add_spacer(height=3)
+                dpg.add_button(label="OPEN CLAW", width=-1, height=28,
+                    callback=lambda: os.system(
+                        f"{CFG['engines']['browser_command']} {OPENCLAW_DASHBOARD}"))
 
             # ── Main content ──────────────────
             with dpg.group():

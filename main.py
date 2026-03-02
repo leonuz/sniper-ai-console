@@ -1,6 +1,6 @@
 """
-Sniper AI Console — Main Entry Point
-Enhanced cyberpunk control panel for Ollama + Open-WebUI local AI stack.
+Sniper AI Console - Main Entry Point
+Enhanced cyberpunk control panel for Ollama + Open-WebUI + OpenClaw local AI stack.
 """
 
 import os
@@ -21,6 +21,7 @@ from monitoring import (
     fetch_ollama_version, fetch_webui_version,
     collect_procs, update_proc_table,
 )
+from engines import fetch_openclaw_version
 from updater import check_for_updates_async
 from ui import build_gui
 
@@ -42,6 +43,7 @@ def update_loop() -> None:
     proc_tick = 0
     ol_port = ENGINES["ollama_port"]
     wb_port = ENGINES["webui_port"]
+    oc_port = ENGINES["openclaw_port"]
     proc_interval = UI["proc_refresh_interval"]
     browser_cmd = ENGINES["browser_command"]
 
@@ -122,12 +124,32 @@ def update_loop() -> None:
                     state.webui_proc = None
                 state.wb_logged = False
 
+            # ── OpenClaw status ───────────────
+            oc_on = port_open(oc_port)
+
+            if oc_on and not state.oc_logged:
+                log("OpenClaw gateway online.", "SUCCESS")
+                state.oc_logged = True
+                def _fetch_oc_ver():
+                    ocv = fetch_openclaw_version()
+                    def _set(v=ocv):
+                        if dpg.does_item_exist("oc_ver"):
+                            dpg.configure_item("oc_ver", default_value=v)
+                    state.queue(_set)
+                threading.Thread(target=_fetch_oc_ver, daemon=True).start()
+
+            if not oc_on and state.oc_logged:
+                log("OpenClaw gateway went offline.", "WARN")
+                state.oc_logged = False
+
             # ── Status lights + toggle buttons ─
-            def _lights(oo=ol_on, wo=wb_on):
+            def _lights(oo=ol_on, wo=wb_on, co=oc_on):
                 if dpg.does_item_exist("ol_light"):
                     dpg.configure_item("ol_light", fill=GREEN_RGB if oo else RED_RGB)
                 if dpg.does_item_exist("wb_light"):
                     dpg.configure_item("wb_light", fill=GREEN_RGB if wo else RED_RGB)
+                if dpg.does_item_exist("oc_light"):
+                    dpg.configure_item("oc_light", fill=GREEN_RGB if co else RED_RGB)
                 if dpg.does_item_exist("ol_status"):
                     dpg.configure_item("ol_status",
                         default_value="ONLINE" if oo else "OFFLINE",
@@ -136,6 +158,10 @@ def update_loop() -> None:
                     dpg.configure_item("wb_status",
                         default_value="ONLINE" if wo else "OFFLINE",
                         color=GREEN if wo else RED)
+                if dpg.does_item_exist("oc_status"):
+                    dpg.configure_item("oc_status",
+                        default_value="ONLINE" if co else "OFFLINE",
+                        color=GREEN if co else RED)
                 # Toggle buttons
                 if dpg.does_item_exist("ol_toggle"):
                     dpg.configure_item("ol_toggle",
@@ -147,11 +173,18 @@ def update_loop() -> None:
                         label="STOP" if wo else "START")
                     dpg.bind_item_theme("wb_toggle",
                         "theme_btn_on" if wo else "theme_btn_off")
+                if dpg.does_item_exist("oc_toggle"):
+                    dpg.configure_item("oc_toggle",
+                        label="STOP" if co else "START")
+                    dpg.bind_item_theme("oc_toggle",
+                        "theme_btn_on" if co else "theme_btn_off")
                 # Version labels: reset to -- when offline
                 if not oo and dpg.does_item_exist("ol_ver"):
                     dpg.configure_item("ol_ver", default_value="--")
                 if not wo and dpg.does_item_exist("wb_ver"):
                     dpg.configure_item("wb_ver", default_value="--")
+                if not co and dpg.does_item_exist("oc_ver"):
+                    dpg.configure_item("oc_ver", default_value="--")
             state.queue(_lights)
 
             # ── Auto browser launch ───────────

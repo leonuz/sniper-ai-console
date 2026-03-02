@@ -1,20 +1,22 @@
 {
     "app": {
         "name": "Sniper AI Console",
-        "version": "v1.2",
+        "version": "v1.3",
         "author": "Leonuz",
         "license": "MIT",
         "portfolio_url": "https://leonuz.github.com"
     },
     "paths": {
         "ollama": "C:\\ollama-intel\\ollama.exe",
-        "webui": "C:\\ollama-intel\\open-webui\\venv\\Scripts\\open-webui.exe"
+        "webui": "C:\\ollama-intel\\open-webui\\venv\\Scripts\\open-webui.exe",
+        "openclaw": "/home/leonuz/.npm-global/bin/openclaw"
     },
     "urls": {
         "portal": "https://sniperx1.uzc",
         "ollama_api": "http://127.0.0.1:11434",
         "webui_local": "http://127.0.0.1:8080",
-        "model_library": "https://ollama.com/library"
+        "model_library": "https://ollama.com/library",
+        "openclaw_dashboard": "http://127.0.0.1:18789"
     },
     "files": {
         "icon": "icon.ico",
@@ -38,6 +40,7 @@
         "ollama_host": "0.0.0.0:11434",
         "ollama_port": 11434,
         "webui_port": 8080,
+        "openclaw_port": 18789,
         "browser_command": "start msedge",
         "restart_delay": 1.5,
         "orphan_kill_delay": 0.5
