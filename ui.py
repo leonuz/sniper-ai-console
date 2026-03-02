@@ -24,6 +24,7 @@ from engines import (
 )
 from monitoring import (
     refresh_models, pull_model_callback,
+    load_model_callback, unload_model_callback,
 )
 from updater import check_for_updates_async, apply_update_async
 
@@ -420,12 +421,31 @@ def build_gui() -> None:
                             dpg.add_spacer(height=8)
                             dpg.add_text("OLLAMA MODEL MANAGER", color=CYAN)
                             dpg.add_separator()
-                            dpg.add_spacer(height=8)
+                            dpg.add_spacer(height=6)
 
+                            # Active model display
                             with dpg.group(horizontal=True):
+                                dpg.add_text("Active:", color=DIM)
+                                dpg.add_text("(none loaded)", tag="active_model_name",
+                                             color=DIM)
+                                dpg.add_text("", tag="active_model_vram", color=CYAN)
+                                dpg.add_spacer(width=10)
+                                dpg.add_button(label="UNLOAD",
+                                               callback=unload_model_callback)
+
+                            dpg.add_spacer(height=4)
+
+                            # Model selector + load
+                            with dpg.group(horizontal=True):
+                                dpg.add_text("Switch:", color=DIM)
+                                dpg.add_combo(tag="model_combo", items=[],
+                                              width=320)
+                                dpg.add_button(label="LOAD",
+                                               callback=load_model_callback)
+                                dpg.add_spacer(width=20)
                                 dpg.add_text("Pull:", color=DIM)
                                 dpg.add_input_text(tag="pull_input",
-                                                   hint="e.g. llama3:8b", width=320)
+                                                   hint="e.g. llama3:8b", width=200)
                                 dpg.add_button(label="PULL",
                                                callback=pull_model_callback)
                                 dpg.add_spacer(width=6)
@@ -433,7 +453,7 @@ def build_gui() -> None:
                                     callback=lambda: threading.Thread(
                                         target=refresh_models, daemon=True).start())
 
-                            dpg.add_spacer(height=10)
+                            dpg.add_spacer(height=6)
 
                             with dpg.child_window(border=True, height=-1, width=-1):
                                 with dpg.table(tag="model_table", header_row=True,

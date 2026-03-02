@@ -39,6 +39,16 @@ Click **[X]** on any graph to hide it; use **RESTORE ALL GRAPHS** to bring them 
 Lists all locally installed Ollama models with size, quantization, and family.
 The list **auto-refreshes** when you switch to this tab.
 
+### Active Model (VRAM)
+
+The top of the Models tab shows which model is currently loaded in GPU memory (VRAM) and how much VRAM it uses.
+
+- **UNLOAD** - removes the active model from VRAM, freeing GPU memory.
+- **Switch dropdown** - select any installed model from the dropdown.
+- **LOAD** - loads the selected model into VRAM. The previously loaded model is replaced.
+
+### Model Library
+
 - **Pull** a new model by entering a name from the Ollama library and clicking PULL.
 - **Delete** a model by clicking its DELETE button.
 - **Refresh** manually with the REFRESH button.

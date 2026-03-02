@@ -9,6 +9,7 @@
 - **Health check** - detects zombie/crashed processes and updates status automatically
 - **Auto-refresh models** - model list refreshes automatically when switching to the Models tab
 - **Open-WebUI updater** - check for updates and install via Help menu; auto-checks on startup
+- **VRAM model manager** - view active model, load/unload models from GPU memory, switch between models
 - **Tab renamed** DASHBOARD -> GRAPHS with "SYSTEM TELEMETRY" title
 - **System Log** now visible across all tabs (standardised tab content height)
 - **Pull validation** - detects non-existent models and reports errors correctly

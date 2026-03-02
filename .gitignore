@@ -31,3 +31,6 @@ Desktop.ini
 
 # DearPyGui
 dpg.ini
+
+# Security
+.webui_secret_key

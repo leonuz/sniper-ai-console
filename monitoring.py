@@ -12,7 +12,7 @@ import state
 from config import OLLAMA_API, UI
 from logger import log
 from helpers import (
-    HAS_REQUESTS, CYAN, YELLOW, WHITE, DIM,
+    HAS_REQUESTS, CYAN, YELLOW, WHITE, DIM, GREEN, RED,
     heat_colour,
 )
 
@@ -81,19 +81,22 @@ def refresh_models() -> None:
     state.model_list = data.get("models", [])
     log(f"Model list refreshed -- {len(state.model_list)} model(s).", "MODEL")
     state.queue(rebuild_model_table)
+    refresh_active_model()
 
 
 def rebuild_model_table() -> None:
-    """Rebuild the Models tab table from state.model_list."""
+    """Rebuild the Models tab table and model selector from state.model_list."""
     if not dpg.does_item_exist("model_table"):
         return
     for c in (dpg.get_item_children("model_table", slot=1) or []):
         dpg.delete_item(c)
+    names = []
     for m in state.model_list:
         name  = m.get("name", "unknown")
         size  = m.get("size", 0) / (1024 ** 3)
         quant = m.get("details", {}).get("quantization_level", "?")
         fam   = m.get("details", {}).get("family", "?")
+        names.append(name)
         with dpg.table_row(parent="model_table"):
             dpg.add_text(name,             color=CYAN)
             dpg.add_text(f"{size:.2f} GB", color=WHITE)
@@ -101,22 +104,154 @@ def rebuild_model_table() -> None:
             dpg.add_text(fam,              color=DIM)
             dpg.add_button(label="DELETE", small=True,
                            user_data=name, callback=_delete_model_cb)
+    # Update model selector combo
+    if dpg.does_item_exist("model_combo"):
+        dpg.configure_item("model_combo", items=names)
+        if names and not dpg.get_value("model_combo"):
+            dpg.set_value("model_combo", names[0])
 
 
 def _delete_model_cb(sender, app_data, user_data: str) -> None:
+    """Show confirmation dialog before deleting a model."""
     name = user_data
-    log(f"Deleting '{name}' ...", "WARN")
+    dialog_tag = "delete_confirm_dlg"
+
+    # Remove existing dialog if any
+    if dpg.does_item_exist(dialog_tag):
+        dpg.delete_item(dialog_tag)
+
+    def _confirm():
+        dpg.delete_item(dialog_tag)
+        log(f"Deleting '{name}' ...", "WARN")
+        def _do():
+            try:
+                r = requests.delete(f"{OLLAMA_API}/api/delete",
+                                    json={"name": name}, timeout=15)
+                if r.status_code == 200:
+                    log(f"'{name}' deleted.", "SUCCESS")
+                else:
+                    log(f"Delete failed ({r.status_code}).", "ERROR")
+            except Exception as exc:
+                log(f"Delete error: {exc}", "ERROR")
+            refresh_models()
+        threading.Thread(target=_do, daemon=True).start()
+
+    def _cancel():
+        dpg.delete_item(dialog_tag)
+        log(f"Delete '{name}' cancelled.", "INFO")
+
+    with dpg.window(label="Confirm Delete", tag=dialog_tag,
+                    modal=True, no_resize=True, no_move=False,
+                    width=420, height=130):
+        dpg.add_spacer(height=8)
+        dpg.add_text(f"  Are you sure you want to delete '{name}'?",
+                     color=(255, 210, 0, 255))
+        dpg.add_text("  This action cannot be undone.",
+                     color=(180, 180, 180, 255))
+        dpg.add_spacer(height=10)
+        with dpg.group(horizontal=True):
+            dpg.add_spacer(width=120)
+            dpg.add_button(label="  YES, DELETE  ", callback=lambda: _confirm())
+            dpg.add_spacer(width=20)
+            dpg.add_button(label="  CANCEL  ", callback=lambda: _cancel())
+
+
+# ─────────────────────────────────────────────
+#  VRAM / ACTIVE MODEL MANAGEMENT
+# ─────────────────────────────────────────────
+def refresh_active_model() -> None:
+    """Fetch running models from /api/ps and update the UI."""
+    data = api_get("/api/ps")
+    if data is None:
+        state.queue(lambda: _update_active_display("", 0.0))
+        return
+    models = data.get("models", [])
+    if models:
+        m = models[0]
+        name = m.get("name", "unknown")
+        # Try multiple fields for VRAM size
+        vram_bytes = (m.get("size_vram", 0)
+                      or m.get("size", 0)
+                      or m.get("vram", 0))
+        vram_gb = vram_bytes / (1024 ** 3) if vram_bytes else 0.0
+        log(f"Active model: {name} | VRAM: {vram_gb:.2f} GB", "DEBUG")
+        state.queue(lambda n=name, v=vram_gb: _update_active_display(n, v))
+    else:
+        state.queue(lambda: _update_active_display("", 0.0))
+
+
+def _update_active_display(name: str, vram_gb: float = 0.0) -> None:
+    """Update active model labels on the UI thread."""
+    if dpg.does_item_exist("active_model_name"):
+        if name:
+            dpg.configure_item("active_model_name",
+                               default_value=name, color=GREEN)
+        else:
+            dpg.configure_item("active_model_name",
+                               default_value="(none loaded)", color=DIM)
+    if dpg.does_item_exist("active_model_vram"):
+        if name:
+            dpg.configure_item("active_model_vram",
+                               default_value=f"  VRAM: {vram_gb:.2f} GB", color=CYAN)
+        else:
+            dpg.configure_item("active_model_vram",
+                               default_value="", color=DIM)
+
+
+def load_model_callback() -> None:
+    """Load the selected model into VRAM."""
+    if not dpg.does_item_exist("model_combo"):
+        return
+    name = dpg.get_value("model_combo")
+    if not name:
+        log("Select a model first.", "WARN")
+        return
+    log(f"Loading '{name}' into VRAM ...", "MODEL")
+
     def _do():
         try:
-            r = requests.delete(f"{OLLAMA_API}/api/delete",
-                                json={"name": name}, timeout=15)
+            r = requests.post(
+                f"{OLLAMA_API}/api/generate",
+                json={"model": name, "prompt": "", "keep_alive": -1},
+                timeout=120,
+            )
             if r.status_code == 200:
-                log(f"'{name}' deleted.", "SUCCESS")
+                log(f"'{name}' loaded into VRAM.", "SUCCESS")
             else:
-                log(f"Delete failed ({r.status_code}).", "ERROR")
+                log(f"Load failed ({r.status_code}).", "ERROR")
         except Exception as exc:
-            log(f"Delete error: {exc}", "ERROR")
-        refresh_models()
+            log(f"Load error: {exc}", "ERROR")
+        refresh_active_model()
+
+    threading.Thread(target=_do, daemon=True).start()
+
+
+def unload_model_callback() -> None:
+    """Unload the current model from VRAM."""
+    # Get the active model name from the UI label
+    if not dpg.does_item_exist("active_model_name"):
+        return
+    name = dpg.get_value("active_model_name")
+    if not name or name == "(none loaded)":
+        log("No model loaded in VRAM.", "WARN")
+        return
+    log(f"Unloading '{name}' from VRAM ...", "MODEL")
+
+    def _do():
+        try:
+            r = requests.post(
+                f"{OLLAMA_API}/api/generate",
+                json={"model": name, "prompt": "", "keep_alive": 0},
+                timeout=30,
+            )
+            if r.status_code == 200:
+                log(f"'{name}' unloaded from VRAM.", "SUCCESS")
+            else:
+                log(f"Unload failed ({r.status_code}).", "ERROR")
+        except Exception as exc:
+            log(f"Unload error: {exc}", "ERROR")
+        refresh_active_model()
+
     threading.Thread(target=_do, daemon=True).start()
 
 
