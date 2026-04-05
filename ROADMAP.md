@@ -222,6 +222,12 @@ Make the app safer and easier to operate under failure.
 - better startup diagnostics
 - better runtime observability
 
+### Phase 7 progress
+- added migration-period runtime config validation and startup checks
+- replaced silent exception swallowing in the main update loop with traceback-aware logging
+- replaced silent UI queue callback failures with logged diagnostics
+- improved the project foundation for debugging broken runtime or environment assumptions
+
 ### Success criteria
 - failures are actionable
 - broken config or environment issues are easier to diagnose

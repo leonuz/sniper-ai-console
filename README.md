@@ -252,7 +252,7 @@ All runtime settings live in `config.json`.
 | `gpu` | GPU label and telemetry method |
 
 The current config loader supports default generation and deep merging with user-provided values.
-Future refactor work will strengthen validation and typing around configuration.
+Future refactor work will strengthen validation and typing around configuration. A migration-period runtime validation layer is now in place to surface obvious path/port/config issues earlier.
 
 ---
 

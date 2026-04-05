@@ -60,11 +60,13 @@ def queue(fn) -> None:
 
 def flush_ui_queue() -> None:
     """Execute all queued UI callables. Call from the main thread."""
+    from app.infrastructure.errors import log_exception
+
     with _ui_lock:
         items = list(_ui_queue)
         _ui_queue.clear()
     for fn in items:
         try:
             fn()
-        except Exception:
-            pass
+        except Exception as exc:
+            log_exception("UI queue callback failure", exc)

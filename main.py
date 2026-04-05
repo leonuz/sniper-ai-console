@@ -15,6 +15,8 @@ from updater import check_for_updates_async
 from ui import build_gui
 from app.adapters.platform.browser import open_url
 from app.application.coordinator import RuntimeCoordinator
+from app.infrastructure.errors import log_exception
+from app.infrastructure.startup_checks import run_startup_checks
 
 
 # ─────────────────────────────────────────────
@@ -57,8 +59,8 @@ def update_loop() -> None:
                 proc_tick = 0
                 coordinator.poll_processes()
 
-        except Exception:
-            pass
+        except Exception as exc:
+            log_exception("Update loop failure", exc)
 
         state.flush_ui_queue()
         time.sleep(1)
@@ -88,6 +90,7 @@ def main():
     dpg.show_viewport()
     dpg.set_primary_window("PrimaryWindow", True)
 
+    run_startup_checks()
     threading.Thread(target=update_loop, daemon=True).start()
 
     log(f"{APP_NAME} {APP_VERSION} ready.", "SUCCESS")
