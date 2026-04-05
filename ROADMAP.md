@@ -195,6 +195,12 @@ Reduce operational logic inside DearPyGui construction and callbacks.
 - cleaner UI module boundaries
 - reduced direct coupling between UI and service code
 
+### Phase 6 progress
+- extracted tray behavior into a dedicated UI module
+- extracted markdown/help windows and secondary windows into a dedicated UI module
+- extracted tab-driven UI bindings into a dedicated bindings module
+- slimmed `ui.py` so it focuses more on top-level composition and less on auxiliary behavior
+
 ### Success criteria
 - the UI mostly presents state rather than orchestrating service logic
 

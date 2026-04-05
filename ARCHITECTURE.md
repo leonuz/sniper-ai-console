@@ -434,7 +434,7 @@ This keeps timing logic explicit and reduces accidental coupling.
 
 The refactor should follow these rules:
 
-Phase 2 has started by introducing dedicated platform adapters for Windows process spawning, WSL command execution, browser launch, and GPU telemetry while keeping the legacy runtime behavior intact. Phase 3 continues that work by introducing explicit managed service adapters for Ollama, Open-WebUI, and OpenClaw. Phase 5 then begins breaking the legacy monolithic update loop into focused pollers coordinated by a runtime coordinator.
+Phase 2 has started by introducing dedicated platform adapters for Windows process spawning, WSL command execution, browser launch, and GPU telemetry while keeping the legacy runtime behavior intact. Phase 3 continues that work by introducing explicit managed service adapters for Ollama, Open-WebUI, and OpenClaw. Phase 5 then begins breaking the legacy monolithic update loop into focused pollers coordinated by a runtime coordinator. Phase 6 starts thinning the UI layer by moving secondary windows, tray behavior, and tab bindings into dedicated UI modules.
 
 ### 1. Preserve working behavior first
 Do not break:

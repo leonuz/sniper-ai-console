@@ -1,6 +1,6 @@
 """
 ui.py — GUI construction for Sniper AI Console.
-Theme, splash, primary window, tabs, help popups.
+Theme, splash, primary window, tabs, and top-level composition.
 """
 
 import os
@@ -10,12 +10,11 @@ import dearpygui.dearpygui as dpg
 
 import state
 from config import (
-    APP_NAME, APP_VERSION, BASE_DIR, CFG,
-    ICON_FILE, LOGO_FILE, PORTAL_URL, OPENCLAW_DASHBOARD, UI,
+    APP_NAME, APP_VERSION, CFG,
+    LOGO_FILE, PORTAL_URL, OPENCLAW_DASHBOARD, UI,
 )
-from logger import log
 from helpers import (
-    HAS_TRAY, CYAN, GREEN, YELLOW, RED, DIM, WHITE,
+    CYAN, GREEN, YELLOW, RED, DIM, WHITE,
     CYAN_RGB, GREEN_RGB, RED_RGB,
 )
 from engines import (
@@ -28,48 +27,14 @@ from monitoring import (
 )
 from updater import check_for_updates_async, apply_update_async
 from app.adapters.platform.browser import open_url
+from app.ui.bindings import on_tab_change
+from app.ui.tray import minimize_to_tray
+from app.ui.windows import show_help_window, show_changelog_window, show_whoami_window
 
 
 # ─────────────────────────────────────────────
-#  MARKDOWN FILE READER
+#  TOP-LEVEL THEME
 # ─────────────────────────────────────────────
-def _read_md(filename: str) -> str:
-    """Read a markdown file from BASE_DIR, return content or fallback."""
-    path = os.path.join(BASE_DIR, filename)
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    except Exception:
-        return f"(Could not load {filename})"
-
-
-# ─────────────────────────────────────────────
-#  SYSTEM TRAY
-# ─────────────────────────────────────────────
-def _tray_thread() -> None:
-    if not HAS_TRAY:
-        return
-    from PIL import Image
-    import pystray
-    from pystray import MenuItem as item
-    try:
-        img = Image.open(ICON_FILE)
-    except Exception:
-        img = Image.new("RGB", (64, 64), (0, 200, 200))
-    def on_show(icon, _):
-        icon.stop()
-        dpg.maximize_viewport()
-    def on_exit(icon, _):
-        icon.stop()
-        nuclear_shutdown()
-        dpg.stop_dearpygui()
-    menu = pystray.Menu(item("Show Console", on_show), item("Exit", on_exit))
-    pystray.Icon("SniperAI", img, APP_NAME, menu).run()
-
-
-def minimize_to_tray() -> None:
-    dpg.minimize_viewport()
-    threading.Thread(target=_tray_thread, daemon=True).start()
 
 
 # ─────────────────────────────────────────────
@@ -117,102 +82,8 @@ def _apply_theme() -> None:
 
 
 # ─────────────────────────────────────────────
-#  HELP POPUP WINDOWS (read from .md files)
+#  UI composition below uses extracted tray/windows/bindings modules
 # ─────────────────────────────────────────────
-def _render_md_window(tag: str, title: str, filename: str,
-                      width: int = 700, height: int = 580) -> None:
-    """Generic popup that renders a markdown file with basic formatting."""
-    if dpg.does_item_exist(tag):
-        dpg.show_item(tag)
-        dpg.focus_item(tag)
-        return
-
-    content = _read_md(filename)
-
-    with dpg.window(label=title, tag=tag, width=width, height=height,
-                    on_close=lambda: dpg.hide_item(tag)):
-        with dpg.child_window(border=False, height=-1, width=-1):
-            for line in content.split("\n"):
-                stripped = line.rstrip()
-                if stripped.startswith("# "):
-                    dpg.add_text(stripped[2:], color=CYAN)
-                    dpg.add_separator()
-                    dpg.add_spacer(height=6)
-                elif stripped.startswith("## "):
-                    dpg.add_spacer(height=6)
-                    dpg.add_text(f"  {stripped[3:]}", color=YELLOW)
-                    dpg.add_spacer(height=2)
-                elif stripped.startswith("### "):
-                    dpg.add_spacer(height=4)
-                    dpg.add_text(f"    {stripped[4:]}", color=CYAN)
-                    dpg.add_spacer(height=2)
-                elif stripped.startswith("- **"):
-                    # Bold list item — extract bold part
-                    dpg.add_text(f"    {stripped[2:]}", color=WHITE)
-                elif stripped.startswith("- "):
-                    dpg.add_text(f"    {stripped}", color=WHITE)
-                elif stripped and stripped[0].isdigit() and ". " in stripped[:4]:
-                    dpg.add_text(f"    {stripped}", color=WHITE)
-                elif stripped == "":
-                    dpg.add_spacer(height=4)
-                else:
-                    dpg.add_text(f"  {stripped}", color=WHITE)
-
-
-def show_help_window() -> None:
-    _render_md_window("win_manual", "Help - User Manual", "MANUAL.md")
-
-
-def show_changelog_window() -> None:
-    _render_md_window("win_changelog", "Help - Changelog", "CHANGELOG.md",
-                      width=660, height=520)
-
-
-def show_whoami_window() -> None:
-    tag = "win_whoami"
-    if dpg.does_item_exist(tag):
-        dpg.show_item(tag); dpg.focus_item(tag); return
-
-    app = CFG["app"]
-    with dpg.window(label="Help - Who Am I", tag=tag,
-                    width=520, height=300, on_close=lambda: dpg.hide_item(tag)):
-        dpg.add_spacer(height=10)
-        dpg.add_text("  ABOUT THE AUTHOR", color=CYAN)
-        dpg.add_separator()
-        dpg.add_spacer(height=10)
-        dpg.add_text(f"  {APP_NAME} was built by {app['author']}.", color=WHITE)
-        dpg.add_spacer(height=10)
-        dpg.add_text("  GitHub / Portfolio:", color=DIM)
-        dpg.add_spacer(height=4)
-        dpg.add_text(f"  {app['portfolio_url']}", color=CYAN)
-        dpg.add_spacer(height=8)
-        dpg.add_button(
-            label="  Open in Browser  ",
-            callback=lambda: open_url("start msedge", app['portfolio_url']),
-        )
-        dpg.add_spacer(height=16)
-        dpg.add_separator()
-        dpg.add_spacer(height=8)
-        dpg.add_text(f"  App Version :  {APP_VERSION}", color=DIM)
-        dpg.add_text(f"  License     :  {app['license']}", color=DIM)
-        dpg.add_text( "  Stack       :  DearPyGui + Ollama + Open-WebUI + OpenClaw", color=DIM)
-
-
-# ─────────────────────────────────────────────
-#  AUTO-REFRESH ON TAB CHANGE
-# ─────────────────────────────────────────────
-_last_tab = None
-
-def _on_tab_change(sender, app_data) -> None:
-    """Called when the tab bar selection changes."""
-    global _last_tab
-    label = dpg.get_item_label(app_data) or ""
-    if "MODELS" in label and _last_tab != "MODELS":
-        from helpers import port_open
-        from config import ENGINES
-        if port_open(ENGINES["ollama_port"]):
-            threading.Thread(target=refresh_models, daemon=True).start()
-    _last_tab = label.strip()
 
 
 # ─────────────────────────────────────────────
@@ -406,7 +277,7 @@ def build_gui() -> None:
 
             # ── Main content ──────────────────
             with dpg.group():
-                with dpg.tab_bar(callback=_on_tab_change):
+                with dpg.tab_bar(callback=on_tab_change):
 
                     # Graphs tab
                     with dpg.tab(label="  GRAPHS  "):
