@@ -2,17 +2,16 @@
 engines.py - Start / stop / toggle logic for Ollama, Open-WebUI, and OpenClaw.
 """
 
-import os
 import subprocess
 import threading
 import time
 
 import state
-from config import OLLAMA_PATH, WEBUI_PATH, OPENCLAW_PATH, ENGINES
+from config import OPENCLAW_PATH, ENGINES
 from logger import log
-from helpers import kill_proc, kill_orphans, port_open, is_proc_alive
-from app.adapters.platform.windows import spawn_process
 from app.adapters.platform.wsl import run_wsl_bash
+from app.application.services_registry import get_service
+from app.domain.enums import ServiceName
 
 
 # ─────────────────────────────────────────────
@@ -20,58 +19,22 @@ from app.adapters.platform.wsl import run_wsl_bash
 # ─────────────────────────────────────────────
 def start_ollama() -> None:
     """Launch Ollama serve process."""
-    if state.ollama_proc is not None and is_proc_alive(state.ollama_proc):
-        log("Ollama is already running.", "WARN")
-        return
-    if state.engine_start_time == 0:
-        state.engine_start_time = time.time()
-    host = ENGINES["ollama_host"]
-    log(f"Launching Ollama (listening on {host}) ...", "INFO")
-    ol_env = os.environ.copy()
-    ol_env["OLLAMA_HOST"] = host
-    state.ollama_proc = spawn_process(
-        [OLLAMA_PATH, "serve"],
-        env=ol_env,
-    )
-    log(f"  Ollama PID: {state.ollama_proc.pid}", "DEBUG")
+    get_service(ServiceName.OLLAMA).start()
 
 
 def stop_ollama() -> None:
     """Stop Ollama process tree."""
-    if state.ollama_proc is None:
-        log("Ollama is not running.", "WARN")
-        return
-    log("Stopping Ollama ...", "INFO")
-    kill_proc(state.ollama_proc, "Ollama")
-    state.ollama_proc = None
-    state.ol_logged = False
+    get_service(ServiceName.OLLAMA).stop()
 
 
 def start_webui() -> None:
     """Launch Open-WebUI serve process."""
-    if state.webui_proc is not None and is_proc_alive(state.webui_proc):
-        log("Open-WebUI is already running.", "WARN")
-        return
-    if state.engine_start_time == 0:
-        state.engine_start_time = time.time()
-    log("Launching Open-WebUI ...", "INFO")
-    state.webui_proc = spawn_process(
-        [WEBUI_PATH, "serve"],
-    )
-    log(f"  Open-WebUI PID: {state.webui_proc.pid}", "DEBUG")
+    get_service(ServiceName.OPEN_WEBUI).start()
 
 
 def stop_webui() -> None:
     """Stop Open-WebUI process tree + orphan sweep."""
-    if state.webui_proc is None:
-        log("Open-WebUI is not running.", "WARN")
-        return
-    log("Stopping Open-WebUI ...", "INFO")
-    kill_proc(state.webui_proc, "Open-WebUI")
-    state.webui_proc = None
-    state.wb_logged = False
-    time.sleep(ENGINES["orphan_kill_delay"])
-    kill_orphans()
+    get_service(ServiceName.OPEN_WEBUI).stop()
 
 
 # ─────────────────────────────────────────────
@@ -103,37 +66,12 @@ def _wsl_exec(cmd: str) -> subprocess.CompletedProcess:
 
 def start_openclaw() -> None:
     """Start OpenClaw gateway via WSL systemd."""
-    if port_open(ENGINES["openclaw_port"]):
-        log("OpenClaw is already running.", "WARN")
-        return
-    log("Launching OpenClaw gateway (WSL) ...", "INFO")
-    try:
-        result = _wsl_exec(f"{OPENCLAW_PATH} gateway start")
-        output = (result.stdout + result.stderr).strip()
-        if result.returncode == 0:
-            log("OpenClaw gateway start command sent.", "SUCCESS")
-        else:
-            log(f"OpenClaw start issue: {output[:200]}", "WARN")
-    except Exception as exc:
-        log(f"OpenClaw start error: {exc}", "ERROR")
+    get_service(ServiceName.OPENCLAW).start()
 
 
 def stop_openclaw() -> None:
     """Stop OpenClaw gateway via WSL systemd."""
-    if not port_open(ENGINES["openclaw_port"]):
-        log("OpenClaw is not running.", "WARN")
-        return
-    log("Stopping OpenClaw gateway (WSL) ...", "INFO")
-    try:
-        result = _wsl_exec(f"{OPENCLAW_PATH} gateway stop")
-        output = (result.stdout + result.stderr).strip()
-        if result.returncode == 0:
-            log("OpenClaw gateway stopped.", "SUCCESS")
-        else:
-            log(f"OpenClaw stop issue: {output[:200]}", "WARN")
-        state.oc_logged = False
-    except Exception as exc:
-        log(f"OpenClaw stop error: {exc}", "ERROR")
+    get_service(ServiceName.OPENCLAW).stop()
 
 
 def toggle_openclaw() -> None:
@@ -146,19 +84,7 @@ def toggle_openclaw() -> None:
 
 def fetch_openclaw_version() -> str:
     """Get OpenClaw version from WSL."""
-    try:
-        result = _wsl_exec(f"{OPENCLAW_PATH} --version 2>/dev/null || echo unknown")
-        ver = result.stdout.strip()
-        # Parse version from output like "OpenClaw 2026.2.26 (bc50708)"
-        if ver and ver != "unknown":
-            parts = ver.split()
-            for p in parts:
-                if any(c.isdigit() for c in p) and "." in p:
-                    return p
-            return ver[:30]
-        return "unknown"
-    except Exception:
-        return "offline"
+    return get_service(ServiceName.OPENCLAW).fetch_version()
 
 
 # ─────────────────────────────────────────────

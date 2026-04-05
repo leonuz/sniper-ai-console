@@ -115,6 +115,12 @@ Represent Ollama, Open-WebUI, and OpenClaw through a common service-oriented mod
 - `OpenClawService`
 - shared service status model
 
+### Phase 3 progress
+- introduced explicit managed service adapters for Ollama, Open-WebUI, and OpenClaw
+- added a shared domain contract for managed services and service health
+- rewired `engines.py` to delegate service start/stop/version behavior through the new service registry
+- kept the current UX and external runtime behavior intact while reducing engine-specific logic in the legacy entry points
+
 ### Success criteria
 - services can be rendered and managed more uniformly
 - less engine-specific branching scattered across the app
