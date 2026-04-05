@@ -4,121 +4,318 @@
   <img src="logo.png" alt="Sniper AI Console" width="300">
 </p>
 
-**Enhanced cyberpunk control panel for managing a local AI stack powered by [Ollama](https://ollama.com) + [Open-WebUI](https://github.com/open-webui/open-webui) + [OpenClaw](https://github.com/openclaw/openclaw).**
+**Sniper AI Console** is a native desktop operations console for managing a local AI stack built around **Ollama**, **Open-WebUI**, and **OpenClaw**.
 
-Built with [DearPyGui](https://github.com/hoffstadt/DearPyGui) for a fast, native desktop experience.
+The project is currently implemented as a **Python + DearPyGui** desktop application focused on a real hybrid environment:
+
+- **Windows** for native desktop UX, local process control, and GPU telemetry
+- **WSL2 Ubuntu** for OpenClaw gateway control
+- **Ollama** for local model serving
+- **Open-WebUI** for browser-based interaction with the model stack
+
+This repository already works as a practical personal operations console.
+The next stage is to turn it into a cleaner, more extensible architecture without breaking the parts that already work well.
 
 ---
 
-## Features
+## Current Status
 
-- **Service Control** - Individual START/STOP toggles for Ollama, Open-WebUI, and OpenClaw with real-time status indicators
-- **System Telemetry** - Live GPU, CPU, and RAM graphs updated every second
-- **Model Manager** - Pull, list, and delete Ollama models with confirmation dialogs
-- **VRAM Manager** - View active model, load/unload models from GPU memory, switch between models
-- **Process Monitor** - Top 25 processes by CPU usage with AI stack highlighting
-- **Update Manager** - Check for and install Open-WebUI updates from the Help menu
-- **OpenClaw Gateway** - Start/stop OpenClaw running on WSL2 Ubuntu, open its dashboard
-- **Health Check** - Detects crashed/zombie processes and reports status automatically
-- **File Logging** - Rotating log file (`sniper_ai.log`) for post-mortem debugging
-- **System Tray** - Minimize to tray with right-click restore/exit
-- **Cyberpunk Theme** - Dark UI with cyan/green/red colour-coded elements
+Sniper AI Console is in an **early but functional** stage.
 
-## Screenshots
+Today it already provides:
 
-<p align="center">
-  <img src="screenshots/dashboard.png" alt="Dashboard" width="800">
-</p>
+- individual **START / STOP** service control for Ollama, Open-WebUI, and OpenClaw
+- real-time **CPU / RAM / GPU telemetry**
+- **Ollama model management** (list, pull, delete)
+- **VRAM management** (inspect active model, load, unload, switch)
+- **process monitoring** with AI-related process highlighting
+- **Open-WebUI update checks and upgrades**
+- **OpenClaw gateway control via WSL2**
+- rotating **file logging** for diagnostics
+- **system tray** support
 
-## Requirements
+The project is intentionally opinionated around a real working environment rather than a generic cross-platform package.
+That is useful for speed, but it also means the current implementation is tightly coupled to one platform and one deployment shape.
 
-- **OS**: Windows 10/11
-- **Python**: 3.10+
-- **Ollama**: Installed locally
-- **Open-WebUI**: Installed in a Python virtual environment
-- **OpenClaw** (optional): Running on WSL2 Ubuntu
+---
 
-### Python Dependencies
+## Why this project exists
 
-```
-pip install dearpygui psutil requests pillow pystray
-```
+The goal is not just to launch a few tools.
+The real goal is to provide a **single local control surface** for an AI workstation or AI-enabled laptop:
 
-> `requests`, `pillow`, and `pystray` are optional - the console degrades gracefully without them.
+- start and stop critical services fast
+- know what is online or broken right now
+- inspect resource pressure quickly
+- manage models without dropping into multiple terminals
+- bridge Windows-native tools and Linux/WSL workflows
+- reduce friction in daily operation
+
+---
+
+## Technology Stack
+
+### Runtime
+- **Python 3.10+**
+
+### UI
+- **DearPyGui**
+
+### Monitoring / utilities
+- **psutil**
+- **requests**
+- **pystray**
+- **pillow**
+
+### Managed services
+- **Ollama**
+- **Open-WebUI**
+- **OpenClaw**
+
+### Platform assumptions
+- **Windows 10/11**
+- **WSL2 Ubuntu** for OpenClaw integration
+
+---
+
+## Current Architecture
+
+The current codebase is modular, but still relatively small and tightly integrated.
+
+### Main modules
+
+- `main.py`
+  - entry point
+  - viewport creation
+  - application update loop
+
+- `config.py`
+  - loads `config.json`
+  - provides merged defaults
+
+- `state.py`
+  - shared mutable application state
+  - simple cross-thread UI queue
+
+- `logger.py`
+  - visual app log
+  - rotating file log
+
+- `helpers.py`
+  - utility functions
+  - process control helpers
+  - GPU telemetry helpers
+
+- `engines.py`
+  - start/stop/toggle logic for Ollama, Open-WebUI, OpenClaw
+
+- `monitoring.py`
+  - telemetry collection
+  - process table
+  - Ollama model operations
+  - active model / VRAM operations
+
+- `ui.py`
+  - DearPyGui layout, themes, menus, dialogs
+
+- `updater.py`
+  - Open-WebUI version check and upgrade flow
+
+### Architectural reality
+
+The current project is best described as:
+
+**a functional desktop operations console with a modular code layout, but with significant coupling between UI, process control, platform details, and service-specific logic**.
+
+That is acceptable for the current project size.
+It is not the right long-term shape if the console is going to keep growing.
+
+For the forward-looking design, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+---
+
+## Current Strengths
+
+- already useful in real day-to-day operation
+- modular enough to refactor without a total rewrite
+- clear focus on practical local AI stack management
+- UI is fast and native
+- working Intel ARC telemetry path is already integrated
+- OpenClaw WSL integration is already functional
+- model operations and VRAM control are real, not mocked
+
+---
+
+## Current Weaknesses
+
+- strong platform coupling to one Windows + WSL workflow
+- global mutable state
+- hardcoded service assumptions in several layers
+- one central update loop doing too much
+- some error handling is too silent
+- no test suite yet
+- no formal packaging / installer / CI pipeline yet
+
+---
+
+## Direction of the Refactor
+
+The intended direction is **not** to replace what already works.
+It is to reorganize the project so the working parts become easier to maintain, test, and extend.
+
+Key principles for the next stage:
+
+1. **Keep the working Intel ARC and current library integrations intact** unless there is a clear reason to change them.
+2. **Separate domain logic from platform-specific code**.
+3. **Treat services as first-class objects** instead of scattered special cases.
+4. **Make the UI thinner** and push operational logic downward.
+5. **Introduce a controlled application state model**.
+6. **Improve observability and error handling** before adding too many new features.
+
+See:
+
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [ROADMAP.md](ROADMAP.md)
+- [DEVELOPMENT.md](DEVELOPMENT.md)
+
+---
 
 ## Installation
 
-1. Clone the repository:
+### Requirements
+
+- Windows 10/11
+- Python 3.10+
+- Ollama installed locally
+- Open-WebUI installed in a Python virtual environment
+- OpenClaw available inside WSL2 Ubuntu
+
+### Python dependencies
+
+```bash
+pip install dearpygui psutil requests pillow pystray
+```
+
+> `requests`, `pillow`, and `pystray` are optional in some flows, but recommended for full functionality.
+
+### Clone the repository
+
 ```bash
 git clone https://github.com/leonuz/sniper-ai-console.git
 cd sniper-ai-console
 ```
 
-2. Install dependencies:
-```bash
-pip install dearpygui psutil requests pillow pystray
-```
+### Configure paths
 
-3. Edit `config.json` to match your local paths:
+Edit `config.json` to match your environment.
+A typical shape is:
+
 ```json
 {
-    "paths": {
-        "ollama": "C:\\path\\to\\ollama.exe",
-        "webui": "C:\\path\\to\\open-webui\\venv\\Scripts\\open-webui.exe",
-        "openclaw": "/home/youruser/.npm-global/bin/openclaw"
-    }
+  "paths": {
+    "ollama": "C:\\path\\to\\ollama.exe",
+    "webui": "C:\\path\\to\\open-webui\\venv\\Scripts\\open-webui.exe",
+    "openclaw": "/home/youruser/.npm-global/bin/openclaw"
+  }
 }
 ```
 
-4. Copy your `icon.ico` and `logo.png` to the project folder.
+### Run
 
-5. Run:
 ```bash
 python main.py
 ```
 
-Or double-click `start.bat`.
+Or run:
+
+```bash
+start.bat
+```
+
+---
 
 ## Configuration
 
-All settings live in `config.json` - no need to edit code. The file is auto-generated with defaults if missing.
+All runtime settings live in `config.json`.
 
-| Section | What it controls |
-|---------|-----------------|
-| `app` | Name, version, author info |
-| `paths` | Ollama, WebUI, and OpenClaw executable locations |
-| `urls` | Portal URL, API endpoints, OpenClaw dashboard |
-| `files` | Icon and logo filenames |
-| `ui` | Window dimensions, graph sizes, refresh intervals |
-| `engines` | Ports, host bindings, browser command |
-| `logging` | Log file path, rotation size, backup count |
-| `gpu` | GPU label and monitoring method |
+### Main sections
+
+| Section | Purpose |
+|---|---|
+| `app` | app metadata |
+| `paths` | executable paths |
+| `urls` | local and dashboard URLs |
+| `files` | icon and logo filenames |
+| `ui` | viewport sizes and refresh intervals |
+| `engines` | ports, browser command, delays |
+| `logging` | file log settings |
+| `gpu` | GPU label and telemetry method |
+
+The current config loader supports default generation and deep merging with user-provided values.
+Future refactor work will strengthen validation and typing around configuration.
+
+---
+
+## Documentation Map
+
+- [MANUAL.md](MANUAL.md) — current usage guide
+- [CHANGELOG.md](CHANGELOG.md) — version history
+- [ARCHITECTURE.md](ARCHITECTURE.md) — current architecture, design issues, target architecture
+- [ROADMAP.md](ROADMAP.md) — refactor roadmap and phases
+- [DEVELOPMENT.md](DEVELOPMENT.md) — development notes and project structure
+
+---
 
 ## Project Structure
 
-```
+```text
 sniper-ai-console/
-├── main.py           # Entry point + update loop
-├── config.py         # Configuration loader
-├── state.py          # Shared mutable state
-├── logger.py         # Visual log + rotating file log
-├── helpers.py        # Utilities (ports, process kill, GPU)
-├── engines.py        # Service start/stop/toggle (Ollama, WebUI, OpenClaw)
-├── monitoring.py     # Telemetry, models, VRAM manager, process table
-├── updater.py        # Open-WebUI update checker/installer
-├── ui.py             # GUI theme, layout, help popups
-├── config.json       # User-editable configuration
-├── CHANGELOG.md      # Version history
-├── MANUAL.md         # User manual
-├── start.bat         # Windows launcher
-├── icon.ico          # Window/tray icon
-└── logo.png          # Splash + sidebar logo
+├── main.py
+├── config.py
+├── state.py
+├── logger.py
+├── helpers.py
+├── engines.py
+├── monitoring.py
+├── updater.py
+├── ui.py
+├── config.json
+├── README.md
+├── MANUAL.md
+├── CHANGELOG.md
+├── ARCHITECTURE.md
+├── ROADMAP.md
+├── DEVELOPMENT.md
+├── start.bat
+├── icon.ico
+├── logo.png
+└── screenshots/
 ```
+
+---
+
+## Refactor Philosophy
+
+This project should evolve through **controlled restructuring**, not a blind rewrite.
+
+That means:
+
+- document first
+- preserve working behavior
+- improve module boundaries
+- add architecture before adding abstraction for its own sake
+- make each refactor phase small enough to validate safely
+
+---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License — see [LICENSE](LICENSE).
+
+---
 
 ## Author
 
-**Leonuz** - [GitHub](https://github.com/leonuz)
+**Leonuz**
+
+GitHub: <https://github.com/leonuz>
