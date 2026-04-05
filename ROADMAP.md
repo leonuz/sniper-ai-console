@@ -169,6 +169,12 @@ Separate periodic responsibilities into focused components.
 - dedicated poller/coordinator modules
 - slimmer main loop or orchestrator layer
 
+### Phase 5 progress
+- added focused pollers for telemetry, services, and processes
+- added a `RuntimeCoordinator` to orchestrate those pollers
+- reduced `main.py` from a single large operational loop to a thinner coordinator-driven loop
+- preserved current external behavior while making the timing and polling responsibilities clearer
+
 ### Success criteria
 - timing behavior is clearer
 - easier to test and debug periodic logic
