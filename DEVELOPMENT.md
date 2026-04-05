@@ -286,3 +286,5 @@ That order will produce less chaos than rewriting from the outside inward.
 
 Sniper AI Console already works as a real local operations console.
 The right next move is disciplined restructuring, not dramatic reinvention.
+
+One important consequence of that approach: once the refactor reached Phase 8, the application became a candidate for real smoke testing on the target Windows 11 workstation instead of waiting for a final rewrite milestone.

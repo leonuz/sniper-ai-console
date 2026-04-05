@@ -318,7 +318,25 @@ That means:
 - add architecture before adding abstraction for its own sake
 - make each refactor phase small enough to validate safely
 
+After the current refactor phases, the application is intended to remain runnable during the transition. In practice, that means the project should be smoke-tested on the real target environment rather than waiting for a hypothetical final rewrite.
+
 ---
+
+## Practical test point
+
+After Phases 1 through 8 of the refactor, the application is already in a state where it should be tested on the target workstation.
+
+Target validation environment:
+
+- Windows 11
+- Lenovo ThinkPad X1 Carbon Gen 13
+- Intel ARC 140V GPU
+- 32 GB RAM
+- local Ollama on Windows
+- local Open-WebUI on Windows
+- OpenClaw via WSL2 Ubuntu
+
+That test point exists now because the refactor has intentionally preserved compatibility while improving the internal architecture.
 
 ## License
 

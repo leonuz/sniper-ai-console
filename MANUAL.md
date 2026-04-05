@@ -441,3 +441,33 @@ Sniper AI Console should currently be understood as:
 
 That is fine.
 The next step is to improve the architecture without losing the working behavior.
+
+---
+
+## Smoke testing after the refactor phases
+
+After the completed refactor phases, the application should be tested directly on the target machine rather than treated as a code-only exercise.
+
+Current intended smoke-test environment:
+
+- Windows 11
+- Lenovo ThinkPad X1 Carbon Gen 13
+- Intel ARC 140V GPU
+- 32 GB RAM
+- Ollama running locally on Windows
+- Open-WebUI running locally on Windows
+- OpenClaw controlled through WSL2 Ubuntu
+
+Recommended smoke-test coverage:
+
+- app launches without crashing
+- splash transitions into the main window
+- CPU / RAM / GPU telemetry updates normally
+- Ollama toggle works
+- Open-WebUI toggle works
+- OpenClaw toggle works through WSL
+- Models tab loads and refreshes
+- active model / VRAM display behaves correctly
+- process table refreshes
+- browser shortcuts work
+- startup diagnostics appear in the log when configuration issues exist

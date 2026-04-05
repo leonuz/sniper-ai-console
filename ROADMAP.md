@@ -257,6 +257,31 @@ Protect the refactor and enable safer iteration.
 ### Success criteria
 - future refactors have guardrails
 - logic changes become lower-risk
+- the application is ready for practical smoke testing on the real target environment after Phase 8
+
+### What should be tested after Phase 8
+Once Phases 1 through 8 are in place, the application should be smoke-tested on the real target machine and operating environment. For this project that means, specifically:
+
+- Windows 11
+- Lenovo ThinkPad X1 Carbon Gen 13
+- Intel ARC 140V GPU
+- 32 GB RAM
+- local Ollama on Windows
+- local Open-WebUI on Windows
+- OpenClaw running through WSL2 Ubuntu
+
+Recommended smoke-test scope after Phase 8:
+- application startup and splash transition
+- sidebar rendering and status indicators
+- CPU / RAM / GPU telemetry updates
+- Ollama start / stop
+- Open-WebUI start / stop
+- OpenClaw start / stop through WSL
+- model list refresh
+- active model / VRAM display
+- process table refresh
+- browser launch actions
+- startup diagnostics and visible error reporting
 
 ---
 
