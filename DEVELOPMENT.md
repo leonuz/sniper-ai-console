@@ -186,8 +186,8 @@ Do not move everything at once unless there is a compelling reason.
 
 ## Testing strategy
 
-The project currently has no automated test suite.
-That should change during the refactor.
+The project now has an initial automated `unittest` suite for core logic.
+It should continue to grow during the refactor.
 
 ### Good first test targets
 - config merge behavior
@@ -195,6 +195,13 @@ That should change during the refactor.
 - service state / health logic
 - model parsing from Ollama API responses
 - store/state transitions once introduced
+
+### Current test coverage
+- config validation
+- mapper functions
+- default service definitions
+- store/state sync behavior
+- lightweight registry expectations
 
 ### What not to test first
 - full DearPyGui rendering
