@@ -4,7 +4,6 @@ Port checking, process killing, uptime, colour helpers, GPU reading.
 """
 
 import os
-import re
 import socket
 import subprocess
 import time
@@ -14,6 +13,8 @@ import psutil
 import state
 from config import ENGINES
 from logger import log
+from app.adapters.platform.gpu import read_gpu_percent
+from app.adapters.platform.windows import taskkill_process_tree
 
 # ─────────────────────────────────────────────
 #  OPTIONAL IMPORTS
@@ -74,10 +75,7 @@ def kill_proc(proc: subprocess.Popen, label: str) -> None:
             log(f"  {label} (PID {pid}) already stopped.", "INFO")
             return
         log(f"  Killing {label} (PID {pid}) + process tree ...", "INFO")
-        result = subprocess.run(
-            f"taskkill /F /T /PID {pid}",
-            shell=True, capture_output=True, text=True,
-        )
+        result = taskkill_process_tree(pid)
         if result.returncode == 0:
             log(f"  {label} (PID {pid}) terminated.", "SUCCESS")
         else:
@@ -138,17 +136,5 @@ def heat_colour(val: float):
 #  GPU READING
 # ─────────────────────────────────────────────
 def get_gpu_val() -> float:
-    """Read GPU utilisation via PowerShell performance counter."""
-    try:
-        ps_cmd = (
-            r"Get-Counter '\GPU Engine(*)\Utilization Percentage'"
-            r" -SampleInterval 1 -MaxSamples 1"
-            r" | Select-Object -ExpandProperty CounterSamples"
-            r" | Select-Object -ExpandProperty CookedValue"
-        )
-        cmd = ["powershell", "-Command", ps_cmd]
-        output = subprocess.check_output(cmd, creationflags=subprocess.CREATE_NO_WINDOW).decode()
-        values = re.findall(r"(\d+\.?\d*)", output)
-        return min(100.0, max(float(v) for v in values)) if values else 0.0
-    except Exception:
-        return 0.0
+    """Read GPU utilisation via the active platform adapter."""
+    return read_gpu_percent()

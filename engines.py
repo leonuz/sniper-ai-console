@@ -11,6 +11,8 @@ import state
 from config import OLLAMA_PATH, WEBUI_PATH, OPENCLAW_PATH, ENGINES
 from logger import log
 from helpers import kill_proc, kill_orphans, port_open, is_proc_alive
+from app.adapters.platform.windows import spawn_process
+from app.adapters.platform.wsl import run_wsl_bash
 
 
 # ─────────────────────────────────────────────
@@ -27,9 +29,8 @@ def start_ollama() -> None:
     log(f"Launching Ollama (listening on {host}) ...", "INFO")
     ol_env = os.environ.copy()
     ol_env["OLLAMA_HOST"] = host
-    state.ollama_proc = subprocess.Popen(
+    state.ollama_proc = spawn_process(
         [OLLAMA_PATH, "serve"],
-        creationflags=subprocess.CREATE_NO_WINDOW,
         env=ol_env,
     )
     log(f"  Ollama PID: {state.ollama_proc.pid}", "DEBUG")
@@ -54,9 +55,8 @@ def start_webui() -> None:
     if state.engine_start_time == 0:
         state.engine_start_time = time.time()
     log("Launching Open-WebUI ...", "INFO")
-    state.webui_proc = subprocess.Popen(
+    state.webui_proc = spawn_process(
         [WEBUI_PATH, "serve"],
-        creationflags=subprocess.CREATE_NO_WINDOW,
     )
     log(f"  Open-WebUI PID: {state.webui_proc.pid}", "DEBUG")
 
@@ -98,11 +98,7 @@ def toggle_webui() -> None:
 # ─────────────────────────────────────────────
 def _wsl_exec(cmd: str) -> subprocess.CompletedProcess:
     """Execute a command inside WSL and return the result."""
-    return subprocess.run(
-        ["wsl", "-e", "bash", "-lc", cmd],
-        capture_output=True, text=True, timeout=30,
-        creationflags=subprocess.CREATE_NO_WINDOW,
-    )
+    return run_wsl_bash(cmd, timeout=30)
 
 
 def start_openclaw() -> None:

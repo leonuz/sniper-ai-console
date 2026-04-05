@@ -434,6 +434,8 @@ This keeps timing logic explicit and reduces accidental coupling.
 
 The refactor should follow these rules:
 
+Phase 2 has started by introducing dedicated platform adapters for Windows process spawning, WSL command execution, browser launch, and GPU telemetry while keeping the legacy runtime behavior intact.
+
 ### 1. Preserve working behavior first
 Do not break:
 - Intel ARC / GPU telemetry path

@@ -27,6 +27,7 @@ from monitoring import (
     load_model_callback, unload_model_callback,
 )
 from updater import check_for_updates_async, apply_update_async
+from app.adapters.platform.browser import open_url
 
 
 # ─────────────────────────────────────────────
@@ -187,7 +188,7 @@ def show_whoami_window() -> None:
         dpg.add_spacer(height=8)
         dpg.add_button(
             label="  Open in Browser  ",
-            callback=lambda: os.system(f"start msedge {app['portfolio_url']}"),
+            callback=lambda: open_url("start msedge", app['portfolio_url']),
         )
         dpg.add_spacer(height=16)
         dpg.add_separator()
@@ -295,11 +296,11 @@ def build_gui() -> None:
                     callback=lambda: threading.Thread(target=refresh_models, daemon=True).start())
             with dpg.menu(label="Portal"):
                 dpg.add_menu_item(label="Open WebUI Portal",
-                    callback=lambda: os.system(
-                        f"{CFG['engines']['browser_command']} {PORTAL_URL}"))
+                    callback=lambda: open_url(
+                        CFG['engines']['browser_command'], PORTAL_URL))
                 dpg.add_menu_item(label="Open OpenClaw Dashboard",
-                    callback=lambda: os.system(
-                        f"{CFG['engines']['browser_command']} {OPENCLAW_DASHBOARD}"))
+                    callback=lambda: open_url(
+                        CFG['engines']['browser_command'], OPENCLAW_DASHBOARD))
             with dpg.menu(label="Help"):
                 dpg.add_menu_item(label="Manual",    callback=show_help_window)
                 dpg.add_menu_item(label="Changelog", callback=show_changelog_window)
@@ -396,12 +397,12 @@ def build_gui() -> None:
                                callback=minimize_to_tray)
                 dpg.add_spacer(height=3)
                 dpg.add_button(label="OPEN PORTAL", width=-1, height=28,
-                    callback=lambda: os.system(
-                        f"{CFG['engines']['browser_command']} {PORTAL_URL}"))
+                    callback=lambda: open_url(
+                        CFG['engines']['browser_command'], PORTAL_URL))
                 dpg.add_spacer(height=3)
                 dpg.add_button(label="OPEN CLAW", width=-1, height=28,
-                    callback=lambda: os.system(
-                        f"{CFG['engines']['browser_command']} {OPENCLAW_DASHBOARD}"))
+                    callback=lambda: open_url(
+                        CFG['engines']['browser_command'], OPENCLAW_DASHBOARD))
 
             # ── Main content ──────────────────
             with dpg.group():

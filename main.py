@@ -3,7 +3,6 @@ Sniper AI Console - Main Entry Point
 Enhanced cyberpunk control panel for Ollama + Open-WebUI + OpenClaw local AI stack.
 """
 
-import os
 import threading
 import time
 
@@ -24,6 +23,7 @@ from monitoring import (
 from engines import fetch_openclaw_version
 from updater import check_for_updates_async
 from ui import build_gui
+from app.adapters.platform.browser import open_url
 
 
 # ─────────────────────────────────────────────
@@ -190,7 +190,7 @@ def update_loop() -> None:
             # ── Auto browser launch ───────────
             if ol_on and wb_on and not state.browser_launched:
                 log("Full handshake confirmed. Launching browser ...", "SUCCESS")
-                os.system(f"{browser_cmd} {PORTAL_URL}")
+                open_url(browser_cmd, PORTAL_URL)
                 state.browser_launched = True
             elif not (ol_on and wb_on):
                 state.browser_launched = False

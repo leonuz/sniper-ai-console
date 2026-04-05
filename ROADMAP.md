@@ -88,6 +88,11 @@ Move Windows- and WSL-specific behavior out of mixed utility modules.
 - platform adapters under a dedicated package
 - reduced platform logic in generic modules
 
+### Phase 2 progress
+- added platform adapters for Windows process spawning, WSL command execution, browser launch, and GPU telemetry
+- connected the existing runtime to those adapters without changing the external behavior of the app
+- preserved the current Intel ARC / PowerShell GPU telemetry path by moving it behind an adapter boundary
+
 ### Success criteria
 - UI no longer directly depends on shell/platform commands
 - service control logic becomes easier to reason about
