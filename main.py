@@ -24,6 +24,9 @@ from engines import fetch_openclaw_version
 from updater import check_for_updates_async
 from ui import build_gui
 from app.adapters.platform.browser import open_url
+from app.application.mappers import telemetry_snapshot
+from app.application.state_sync import update_service_status, update_telemetry
+from app.domain.enums import ServiceName, ServiceStatus
 
 
 # ─────────────────────────────────────────────
@@ -78,6 +81,16 @@ def update_loop() -> None:
                 if dpg.does_item_exist("ram_abs"):
                     dpg.configure_item("ram_abs", default_value=ra)
             state.queue(_sidebar)
+            update_telemetry(
+                telemetry_snapshot(
+                    cpu_percent=cpu,
+                    ram_percent=ram,
+                    gpu_percent=gpu,
+                    ram_used_gb=ug,
+                    ram_total_gb=tg,
+                    uptime=up,
+                )
+            )
 
             # ── Service status ────────────────
             ol_on = port_open(ol_port)
@@ -93,6 +106,7 @@ def update_loop() -> None:
                 log("Ollama service online.", "SUCCESS")
                 state.ol_logged = True
                 ov = fetch_ollama_version()
+                update_service_status(ServiceName.OLLAMA, status=ServiceStatus.ONLINE, version=ov)
                 def _set_ol_ver(v=ov):
                     if dpg.does_item_exist("ol_ver"):
                         dpg.configure_item("ol_ver", default_value=v)
@@ -102,6 +116,7 @@ def update_loop() -> None:
                 log("Open-WebUI service online.", "SUCCESS")
                 state.wb_logged = True
                 wv = fetch_webui_version()
+                update_service_status(ServiceName.OPEN_WEBUI, status=ServiceStatus.ONLINE, version=wv)
                 def _set_wb_ver(v=wv):
                     if dpg.does_item_exist("wb_ver"):
                         dpg.configure_item("wb_ver", default_value=v)
@@ -117,12 +132,14 @@ def update_loop() -> None:
                     log("Ollama process crashed or was killed externally.", "ERROR")
                     state.ollama_proc = None
                 state.ol_logged = False
+                update_service_status(ServiceName.OLLAMA, status=ServiceStatus.OFFLINE, version="--")
 
             if not wb_on and state.wb_logged:
                 if state.webui_proc is not None and not is_proc_alive(state.webui_proc):
                     log("Open-WebUI process crashed or was killed externally.", "ERROR")
                     state.webui_proc = None
                 state.wb_logged = False
+                update_service_status(ServiceName.OPEN_WEBUI, status=ServiceStatus.OFFLINE, version="--")
 
             # ── OpenClaw status ───────────────
             oc_on = port_open(oc_port)
@@ -132,6 +149,7 @@ def update_loop() -> None:
                 state.oc_logged = True
                 def _fetch_oc_ver():
                     ocv = fetch_openclaw_version()
+                    update_service_status(ServiceName.OPENCLAW, status=ServiceStatus.ONLINE, version=ocv)
                     def _set(v=ocv):
                         if dpg.does_item_exist("oc_ver"):
                             dpg.configure_item("oc_ver", default_value=v)
@@ -141,6 +159,7 @@ def update_loop() -> None:
             if not oc_on and state.oc_logged:
                 log("OpenClaw gateway went offline.", "WARN")
                 state.oc_logged = False
+                update_service_status(ServiceName.OPENCLAW, status=ServiceStatus.OFFLINE, version="--")
 
             # ── Status lights + toggle buttons ─
             def _lights(oo=ol_on, wo=wb_on, co=oc_on):

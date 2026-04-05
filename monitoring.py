@@ -15,6 +15,8 @@ from helpers import (
     HAS_REQUESTS, CYAN, YELLOW, WHITE, DIM, GREEN, RED,
     heat_colour,
 )
+from app.application.mappers import active_model_info, model_info_from_ollama, process_info
+from app.application.state_sync import update_active_model, update_models, update_processes
 
 if HAS_REQUESTS:
     import requests
@@ -79,6 +81,7 @@ def refresh_models() -> None:
     if data is None:
         return
     state.model_list = data.get("models", [])
+    update_models([model_info_from_ollama(m) for m in state.model_list])
     log(f"Model list refreshed -- {len(state.model_list)} model(s).", "MODEL")
     state.queue(rebuild_model_table)
     refresh_active_model()
@@ -163,6 +166,7 @@ def refresh_active_model() -> None:
     """Fetch running models from /api/ps and update the UI."""
     data = api_get("/api/ps")
     if data is None:
+        update_active_model(active_model_info())
         state.queue(lambda: _update_active_display("", 0.0))
         return
     models = data.get("models", [])
@@ -175,8 +179,10 @@ def refresh_active_model() -> None:
                       or m.get("vram", 0))
         vram_gb = vram_bytes / (1024 ** 3) if vram_bytes else 0.0
         log(f"Active model: {name} | VRAM: {vram_gb:.2f} GB", "DEBUG")
+        update_active_model(active_model_info(name, vram_gb))
         state.queue(lambda n=name, v=vram_gb: _update_active_display(n, v))
     else:
+        update_active_model(active_model_info())
         state.queue(lambda: _update_active_display("", 0.0))
 
 
@@ -344,6 +350,7 @@ def collect_procs() -> None:
     with state.proc_lock:
         state.proc_snapshot.clear()
         state.proc_snapshot.extend(procs)
+    update_processes([process_info(name, cpu, ram_mb) for name, cpu, ram_mb in procs[:UI["top_processes"]]])
 
 
 def update_proc_table() -> None:

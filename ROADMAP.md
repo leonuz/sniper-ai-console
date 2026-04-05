@@ -142,6 +142,12 @@ Move away from loosely shared globals.
 - explicit state transitions
 - clearer ownership of runtime values
 
+### Phase 4 progress
+- added explicit state-sync helpers to project the legacy runtime into the new `AppStore`
+- added mapping helpers for telemetry, process, model, and active-model snapshots
+- connected the update loop and monitoring paths so key runtime data now updates the new store in parallel with the legacy state module
+- kept `state.py` as the active compatibility layer while beginning the migration toward explicit state updates
+
 ### Success criteria
 - state changes are easier to trace
 - UI rendering depends on structured state instead of scattered globals

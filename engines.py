@@ -11,7 +11,8 @@ from config import OPENCLAW_PATH, ENGINES
 from logger import log
 from app.adapters.platform.wsl import run_wsl_bash
 from app.application.services_registry import get_service
-from app.domain.enums import ServiceName
+from app.application.state_sync import mark_all_services_unknown, update_service_status
+from app.domain.enums import ServiceName, ServiceStatus
 
 
 # ─────────────────────────────────────────────
@@ -95,6 +96,7 @@ def start_all() -> None:
     state.ol_logged = state.wb_logged = state.oc_logged = False
     state.browser_launched = False
     state.engine_start_time = time.time()
+    mark_all_services_unknown()
     log("Sniper AI Engines initialising ...", "DEBUG")
     try:
         start_ollama()
@@ -131,6 +133,9 @@ def nuclear_shutdown() -> None:
     state.browser_launched = state.ol_logged = state.wb_logged = False
     state.oc_logged = False
     state.engine_start_time = 0.0
+    update_service_status(ServiceName.OLLAMA, status=ServiceStatus.OFFLINE, version="--")
+    update_service_status(ServiceName.OPEN_WEBUI, status=ServiceStatus.OFFLINE, version="--")
+    update_service_status(ServiceName.OPENCLAW, status=ServiceStatus.OFFLINE, version="--")
     log("== Shutdown complete. Console still running. ==", "SUCCESS")
 
 

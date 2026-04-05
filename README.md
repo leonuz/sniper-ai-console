@@ -302,6 +302,8 @@ sniper-ai-console/
 Phase 1 adds the new `app/` and `tests/` scaffolding without replacing the active runtime yet.
 That is intentional: the project is moving toward the new structure incrementally.
 
+Later phases now also begin syncing key runtime state into the new application store while the legacy state module remains active for compatibility.
+
 ---
 
 ## Refactor Philosophy
