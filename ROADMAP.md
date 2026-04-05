@@ -39,7 +39,7 @@ This makes the refactor intentional.
 Without this phase, future changes drift and lose context.
 
 ### Status
-- planned and needed before code refactor begins
+- completed
 
 ---
 
@@ -63,6 +63,13 @@ Introduce a new project structure alongside the current code.
 - project still runs
 - no behavior regressions
 - future code has a proper place to live
+
+### Phase 1 progress
+- added `app/` package scaffold
+- added initial domain enums and dataclasses
+- added a lightweight application store scaffold
+- added forward-compatible infrastructure wrappers for config and logging
+- kept the legacy runtime active so behavior remains unchanged while the new structure is introduced
 
 ---
 

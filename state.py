@@ -1,11 +1,16 @@
 """
 state.py — Shared mutable state for Sniper AI Console.
 All cross-module state lives here to avoid circular imports.
+
+Phase 1 note:
+This module remains the active runtime state container for compatibility,
+while the new `app.application.store` scaffolding is introduced in parallel.
 """
 
 import subprocess
 import threading
 from config import UI
+from app.application.store import store as app_store
 
 # ─────────────────────────────────────────────
 #  SERVICE STATE

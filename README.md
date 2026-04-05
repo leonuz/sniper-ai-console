@@ -270,6 +270,13 @@ Future refactor work will strengthen validation and typing around configuration.
 
 ```text
 sniper-ai-console/
+├── app/
+│   ├── domain/
+│   ├── application/
+│   ├── adapters/
+│   ├── ui/
+│   └── infrastructure/
+├── tests/
 ├── main.py
 ├── config.py
 ├── state.py
@@ -291,6 +298,9 @@ sniper-ai-console/
 ├── logo.png
 └── screenshots/
 ```
+
+Phase 1 adds the new `app/` and `tests/` scaffolding without replacing the active runtime yet.
+That is intentional: the project is moving toward the new structure incrementally.
 
 ---
 
