@@ -253,6 +253,7 @@ Protect the refactor and enable safer iteration.
 - added an initial `unittest` suite covering config validation, mapper logic, default service definitions, and store/state-sync behavior
 - added a lightweight registry-level test that avoids dragging runtime-only dependencies into the unit test path
 - validated the current suite successfully with `python3 -m unittest discover -s tests -p 'test_*.py' -v`
+- completed a successful real-world smoke test on the target Windows 11 workstation after the refactor phases
 
 ### Success criteria
 - future refactors have guardrails

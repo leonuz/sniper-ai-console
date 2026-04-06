@@ -338,6 +338,19 @@ Target validation environment:
 
 That test point exists now because the refactor has intentionally preserved compatibility while improving the internal architecture.
 
+### Validation status
+
+That smoke test has now been completed successfully on the target environment above.
+Confirmed in practice:
+
+- GUI startup works
+- telemetry works
+- GPU activity is visible during a real Open-WebUI query
+- service stop/start cycles work
+- ONLINE/OFFLINE transitions behave correctly
+- no traceback occurred during the validated smoke test
+- no lingering processes were observed after tested restart flows
+
 ## License
 
 MIT License — see [LICENSE](LICENSE).

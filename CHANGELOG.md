@@ -8,17 +8,43 @@ The format is intentionally simple and human-readable.
 
 ## Unreleased
 
-### Documentation
-- rewrote the project README to reflect the real scope, current architecture, and intended direction
-- expanded the manual to better document current behavior and operational assumptions
-- added architecture documentation covering current design, pain points, and target structure
-- added a roadmap for the planned refactor
-- added a development guide for future work on the codebase
+### Consolidation
+- documented successful real-world smoke testing on the target workstation and operating environment
+- added a project TODO file capturing the next priorities after the completed architecture refactor phases
 
-### Project direction
-- formalized the refactor direction toward a cleaner separation between domain logic, service control, platform adapters, application orchestration, and UI rendering
-- documented that the working Intel ARC telemetry path and current library choices should be preserved unless a stronger replacement is justified
-- documented the intent to refactor incrementally rather than perform a blind rewrite
+## v1.4
+
+### Refactor
+- introduced a new `app/` package scaffold for the next architecture stage
+- added domain enums, dataclasses, service contracts, and initial state/store scaffolding
+- extracted platform adapters for Windows process behavior, WSL execution, browser launch, and GPU telemetry
+- introduced explicit managed service adapters for Ollama, Open-WebUI, and OpenClaw
+- added state synchronization from the legacy runtime into the new application store
+- split the legacy monolithic runtime loop into focused pollers coordinated by a runtime coordinator
+- thinned the UI layer by extracting tray logic, popup windows, helpers, and tab bindings
+- improved runtime diagnostics and added migration-period config validation
+- added an initial automated `unittest` suite for core logic
+
+### Documentation
+- rewrote and expanded README, manual, architecture guide, roadmap, and development notes
+- documented that the post-refactor application should be smoke-tested on the target Windows 11 environment
+
+### Validation
+- validated the application successfully on the real target environment:
+  - Windows 11
+  - Lenovo ThinkPad X1 Carbon Gen 13
+  - Intel ARC 140V GPU
+  - 32 GB RAM
+- confirmed successful GUI startup and splash transition
+- confirmed live CPU / RAM / GPU telemetry
+- confirmed Open-WebUI handled a real query while GPU activity appeared in the graphs
+- confirmed service stop/start cycles worked correctly
+- confirmed ONLINE/OFFLINE state transitions behaved correctly
+- confirmed no traceback during the validated smoke test
+- confirmed no lingering processes after tested service restart flows
+
+### Fixes
+- fixed a refactor regression where legacy engine helper imports were missing from `engines.py`, breaking service toggles until restored
 
 ---
 
