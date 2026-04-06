@@ -9,6 +9,7 @@ import time
 import state
 from config import OPENCLAW_PATH, ENGINES
 from logger import log
+from helpers import port_open, kill_proc, kill_orphans
 from app.adapters.platform.wsl import run_wsl_bash
 from app.application.services_registry import get_service
 from app.application.state_sync import mark_all_services_unknown, update_service_status
